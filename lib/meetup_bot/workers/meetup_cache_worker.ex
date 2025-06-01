@@ -5,7 +5,7 @@ defmodule MeetupBot.MeetupCacheWorker do
 
   alias MeetupBot.MeetupCache
   alias MeetupBot.Meetup
-  alias MeetupBot.Constants
+  alias MeetupBot.Event
   alias OpenTelemetry.Tracer
 
   @impl true
@@ -15,7 +15,7 @@ defmodule MeetupBot.MeetupCacheWorker do
 
       events = Meetup.fetch_upcoming_meetups()
       MeetupCache.update_or_create(events)
-      MeetupCache.delete_events_not_present_in_source(Constants.meetup_source(), events)
+      MeetupCache.delete_events_not_present_in_source(Event.meetup_source(), events)
 
       :ok
     end
