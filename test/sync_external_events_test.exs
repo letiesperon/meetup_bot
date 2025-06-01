@@ -89,7 +89,6 @@ defmodule MeetupBot.SyncExternalEventsTest do
     }
     |> Repo.insert!()
 
-
     Bypass.expect(bypass_meetup(), "POST", "/gql", fn conn ->
       conn
       |> Plug.Conn.put_resp_content_type("application/json")
@@ -157,7 +156,6 @@ defmodule MeetupBot.SyncExternalEventsTest do
       datetime: ~N[2030-03-30 19:00:00]
     }
     |> Repo.insert!()
-
 
     Bypass.expect(bypass_meetup(), "POST", "/gql", fn conn ->
       conn
