@@ -3,6 +3,7 @@ defmodule MeetupBot.MeetupCacheWorkerTest do
 
   alias MeetupBot.MeetupCache
   alias MeetupBot.MeetupCacheWorker
+  alias MeetupBot.GDGCacheWorker
   alias MeetupBot.Repo
   alias MeetupBot.Event
 
@@ -43,12 +44,34 @@ defmodule MeetupBot.MeetupCacheWorkerTest do
       """)
     end)
 
-    assert :ok = MeetupCacheWorker.perform(%Oban.Job{})
+    Bypass.expect(bypass_gdg(), "GET", "/api/event", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_content_type("application/json")
+      |> Plug.Conn.resp(200, """
+      {
+        "results": [
+          {
+            "id": 456,
+            "title": "Google Cloud Platform",
+            "url": "http://gdg.example.com",
+            "start_date": "2024-03-29T19:00:00",
+            "end_date": "2024-03-29T21:00:00"
+          }
+        ]
+      }
+      """)
+    end)
 
-    assert [meetup] = MeetupCache.all()
+    assert :ok = MeetupCacheWorker.perform(%Oban.Job{})
+    assert :ok = GDGCacheWorker.perform(%Oban.Job{})
+
+    assert [meetup, gdg] = MeetupCache.all()
 
     assert meetup.source_id == "123"
     assert meetup.name == "Elixir Meetup"
+
+    assert gdg.source_id == "456"
+    assert gdg.name == "GDG"
   end
 
   test "perform/1 update existings meetups", %{} do
@@ -56,6 +79,13 @@ defmodule MeetupBot.MeetupCacheWorkerTest do
       source: "meetup",
       source_id: "123",
       datetime: ~N[2024-03-28 19:00:00]
+    }
+    |> Repo.insert!()
+
+    %Event{
+      source: "GDG",
+      source_id: "456",
+      datetime: ~N[2024-03-30 19:00:00]
     }
     |> Repo.insert!()
 
@@ -87,10 +117,30 @@ defmodule MeetupBot.MeetupCacheWorkerTest do
       """)
     end)
 
-    assert :ok = MeetupCacheWorker.perform(%Oban.Job{})
+    Bypass.expect(bypass_gdg(), "GET", "/api/event", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_content_type("application/json")
+      |> Plug.Conn.resp(200, """
+      {
+        "results": [
+          {
+            "id": 456,
+            "title": "Google Cloud Platform",
+            "url": "http://gdg.example.com",
+            "start_date": "2024-03-31T19:00:00",
+            "end_date": "2024-03-31T23:00:00"
+          }
+        ]
+      }
+      """)
+    end)
 
-    [meetup] = MeetupCache.all()
+    assert :ok = MeetupCacheWorker.perform(%Oban.Job{})
+    assert :ok = GDGCacheWorker.perform(%Oban.Job{})
+
+    [meetup, gdg] = MeetupCache.all()
     assert meetup.datetime == ~N[2024-03-29 19:00:00]
+    assert gdg.datetime == ~N[2024-03-31 19:00:00]
   end
 
   test "perform/1 delete meetups not longer present in source", %{} do
@@ -98,6 +148,13 @@ defmodule MeetupBot.MeetupCacheWorkerTest do
       source: "meetup",
       source_id: "123",
       datetime: ~N[2030-03-28 19:00:00]
+    }
+    |> Repo.insert!()
+
+    %Event{
+      source: "GDG",
+      source_id: "456",
+      datetime: ~N[2030-03-30 19:00:00]
     }
     |> Repo.insert!()
 
@@ -113,7 +170,18 @@ defmodule MeetupBot.MeetupCacheWorkerTest do
       """)
     end)
 
+    Bypass.expect(bypass_gdg(), "GET", "/api/event", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_content_type("application/json")
+      |> Plug.Conn.resp(200, """
+      {
+        "results": []
+      }
+      """)
+    end)
+
     assert :ok = MeetupCacheWorker.perform(%Oban.Job{})
+    assert :ok = GDGCacheWorker.perform(%Oban.Job{})
 
     [] = MeetupCache.all()
   end
