@@ -14,8 +14,8 @@ defmodule MeetupBot.MeetupCacheWorker do
       Tracer.set_attributes([{:worker, "MeetupCacheWorker"}])
 
       events = Meetup.fetch_upcoming_meetups()
-      MeetupCache.update_or_create(events)
-      MeetupCache.delete_events_not_present_in_source(Event.meetup_source(), events)
+
+      MeetupCache.sync(Event.meetup_source(), events)
 
       :ok
     end

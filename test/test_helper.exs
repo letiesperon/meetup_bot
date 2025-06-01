@@ -17,9 +17,7 @@ defmodule Helpers do
 
     bypass
   end
-end
 
-defmodule TestDateHelpers do
   def tomorrow do
     DateTime.utc_now()
     |> DateTime.add(1, :day)
@@ -30,27 +28,6 @@ defmodule TestDateHelpers do
   def day_after_tomorrow do
     DateTime.utc_now()
     |> DateTime.add(2, :day)
-    |> DateTime.truncate(:second)
-    |> DateTime.to_naive()
-  end
-
-  def next_week do
-    DateTime.utc_now()
-    |> DateTime.add(7, :day)
-    |> DateTime.truncate(:second)
-    |> DateTime.to_naive()
-  end
-
-  def yesterday do
-    DateTime.utc_now()
-    |> DateTime.add(-1, :day)
-    |> DateTime.truncate(:second)
-    |> DateTime.to_naive()
-  end
-
-  def in_future_days(days) do
-    DateTime.utc_now()
-    |> DateTime.add(days, :day)
     |> DateTime.truncate(:second)
     |> DateTime.to_naive()
   end
