@@ -19,6 +19,7 @@ defmodule Helpers do
   end
 end
 
+#XXX Revisit
 defmodule ApiStubHelpers do
   @doc """
   Stubs the Meetup API response with the given events

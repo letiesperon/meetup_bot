@@ -13,8 +13,9 @@ defmodule MeetupBot.MeetupCacheWorker do
     Tracer.with_span "oban.perform" do
       Tracer.set_attributes([{:worker, "MeetupCacheWorker"}])
 
-      meetup_events = Meetup.fetch_upcoming_meetups()
-      MeetupCache.sync_upcoming_external_events(meetup_events, Constants.meetup_source())
+      events = Meetup.fetch_upcoming_meetups()
+      MeetupCache.update_or_create(events)
+      MeetupCache.delete_events_not_present_in_source(Constants.meetup_source(), events)
 
       :ok
     end
